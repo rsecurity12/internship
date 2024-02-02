@@ -1,24 +1,26 @@
-﻿{
-    "name":  "IP-ssl",
-    "displayName":  "IP-ssl",
+{
+    "name":  "LDAPsCert",
+    "displayName":  "LDAPsCert",
     "objectClass":  "pKICertificateTemplate",
-    "flags":  131692,
+    "flags":  131168,
     "revision":  100,
-    "msPKI-Cert-Template-OID":  "1.3.6.1.4.1.311.21.8.12709282.13449980.11355318.10719768.14386527.86.7664601.2971297",
+    "msPKI-Cert-Template-OID":  "1.3.6.1.4.1.311.21.8.5545467.2498489.9324167.4278441.14520988.251.39381738.85444761",
     "msPKI-Certificate-Application-Policy":  [
+                                                 "1.3.6.1.5.5.7.3.2",
                                                  "1.3.6.1.5.5.7.3.1",
-                                                 "1.3.6.1.5.5.7.3.2"
+                                                 "1.3.6.1.4.1.311.20.2.2",
+                                                 "1.3.6.1.5.2.3.5"
                                              ],
-    "msPKI-Certificate-Name-Flag":  16777217,
-    "msPKI-Enrollment-Flag":  9,
+    "msPKI-Certificate-Name-Flag":  138412032,
+    "msPKI-Enrollment-Flag":  40,
     "msPKI-Minimal-Key-Size":  2048,
     "msPKI-Private-Key-Flag":  16842768,
     "msPKI-RA-Signature":  0,
-    "msPKI-Template-Minor-Revision":  3,
+    "msPKI-Template-Minor-Revision":  2,
     "msPKI-Template-Schema-Version":  2,
     "pKICriticalExtensions":  [
-                                  "2.5.29.7",
-                                  "2.5.29.15"
+                                  "2.5.29.15",
+                                  "2.5.29.17"
                               ],
     "pKIDefaultCSPs":  [
                            "1,Microsoft RSA SChannel Cryptographic Provider"
@@ -35,8 +37,10 @@
                                 255
                             ],
     "pKIExtendedKeyUsage":  [
+                                "1.3.6.1.5.5.7.3.2",
                                 "1.3.6.1.5.5.7.3.1",
-                                "1.3.6.1.5.5.7.3.2"
+                                "1.3.6.1.4.1.311.20.2.2",
+                                "1.3.6.1.5.2.3.5"
                             ],
     "pKIKeyUsage":  [
                         160,
@@ -45,12 +49,12 @@
     "pKIMaxIssuingDepth":  0,
     "pKIOverlapPeriod":  [
                              0,
-                             208,
-                             90,
-                             184,
-                             190,
-                             207,
-                             172,
+                             128,
+                             166,
+                             10,
+                             255,
+                             222,
+                             255,
                              255
                          ]
 }
