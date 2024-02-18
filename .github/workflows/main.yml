@@ -1,12 +1,12 @@
-name: Build and Release a clean version of Rubeus
-
+######################################### SECTION 1 ################################################
+# This section will build and release a clean version of Rubeus
+name: CleanRubeus
 on:
   push:
     branches:
       - master
-
 jobs:
-  build_and_release:
+  CleanRubeus:
     runs-on: windows-2019
 
     steps:
@@ -23,24 +23,14 @@ jobs:
           nuget restore
           dotnet build --configuration Release
 
-      - name: Debug Information
-        run: |
-          Get-ChildItem -Recurse
-          Get-Location
-
-      - name: Disable Windows Defender
-        run: |
-          Set-MpPreference -DisableRealtimeMonitoring $true
-          Start-Sleep -s 10  # Wait for the changes to take effect
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: Clean-Rubeus.v1
-          release_name: Release 1.0.0
+          tag_name: Rubeus
+          release_name: Rubeus 
           draft: false
           prerelease: false
 
@@ -53,4 +43,270 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "D:\\a\\Rubeus\\Rubeus\\Rubeus\\bin\\Release\\Rubeus.exe"
           asset_name: Rubeus.exe
+          asset_content_type: application/octet-stream
+
+
+######################################### SECTION 2 ###############################################
+# This section will build and release an obfuscated version of Rubeus using InvisibilityCloak
+  invisibilityCloakRubeus:
+    runs-on: windows-2019
+
+    steps:
+      - name: Checkout InvisibilityCloak
+        uses: actions/checkout@v2
+        with:
+           repository: rsecurity12/InvisibilityCloak
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: invisibilitycloak-artifacts
+          path: "D:\\a\\Rubeus\\Rubeus\\InvisibilityCloak.py"
+
+      - name: Checkout Rubeus
+        uses: actions/checkout@v2
+        with:
+           repository: rsecurity12/Rubeus
+           
+      - name: Set up .NET 7
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '7.0.101'
+          
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: invisibilitycloak-artifacts
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11  
+
+      - name: Run InvisibilityCloak
+        run: |                                                      # You can change the flag to run another encoding method 
+          python D:\\a\\Rubeus\\Rubeus\\InvisibilityCloak.py -d D:\\a\\Rubeus\\Rubeus -n "InvisibilityCloakRubeus" -m base64
+          
+      - name: Build
+        run: |
+          dotnet build --configuration Release
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: InvisibilityCloakRubeus
+          release_name: InvisibilityCloakRubeus 
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload_asset
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "D:\\a\\Rubeus\\Rubeus\\InvisibilityCloakRubeus\\obj\\Release\\InvisibilityCloakRubeus.exe"
+          asset_name: InvisibilityCloakRubeus.exe
+          asset_content_type: application/octet-stream
+
+          
+######################################### SECTION 3 ###############################################
+# This section will build and release an obfuscated version of Rubeus using ConfuserEX
+  ConfuserExRubeus:
+    runs-on: windows-2019
+    
+    steps:   
+      - name: Checkout Rubeus
+        uses: actions/checkout@v2
+        with:
+           repository: rsecurity12/Rubeus
+
+      - name: Set up .NET 7
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '7.0.101'
+
+      - name: Build
+        run: |
+          dotnet build --configuration Release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: rubeus-artifacts
+          path: "D:\\a\\Rubeus\\Rubeus\\Rubeus\\bin\\Release\\Rubeus.exe"
+          
+      - name: Checkout ConfuserEx
+        uses: actions/checkout@v2
+        with:
+           repository: rsecurity12/ConfuserEx
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: rubeus-artifacts
+         
+      - name: Create a .crproj file             # You can alter the .crproj file to meet your requirements
+        run: |
+          $xml = @'                                   
+            <project outputDir="D:\\a\\Rubeus\\Rubeus\\Confused" baseDir="D:\\a\\Rubeus\\Rubeus" xmlns="http://confuser.codeplex.com">
+                <module path="Rubeus.exe">
+                    <rule pattern="true" preset="maximum" inherit="false">
+                      <protection id="anti debug" />
+                      <protection id="anti dump" />
+                      <protection id="anti ildasm" />
+                      <protection id="anti tamper" />
+                      <protection id="constants" />  
+                      <protection id="ctrl flow" />
+                      <protection id="harden" />
+                      <protection id="invalid metadata" />
+                      <protection id="ref proxy" />
+                      <protection id="resources" />
+                      <protection id="typescramble" />
+                      <protection id="rename" />
+                      <protection id="watermark" />
+                  </rule>
+                </module>
+             </project>
+          '@
+          Add-Content -Path "project.crproj" -Value $xml -Encoding UTF8
+
+      - name: Create ConfuserEXRubeus                 # -n flag means auto confirm 
+        run:  D:\\a\\Rubeus\\Rubeus\\Confuser.CLI.exe -n D:\\a\\Rubeus\\Rubeus\\project.crproj
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ConfuserExRubeus
+          release_name: ConfuserExRubeus
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload_asset
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "D:\\a\\Rubeus\\Rubeus\\Confused\\Rubeus.exe"
+          asset_name: ConfuserExRubeus.exe
+          asset_content_type: application/octet-stream
+
+
+######################################### SECTION 4 ###############################################
+# This section will build and release an obfuscated version of Rubeus first using InvisibilityCloak and then ConfuserEX
+  InvisibilityCloakConfuserExRubeus:
+    runs-on: windows-2019
+    steps:  
+      - name: Checkout InvisibilityCloak
+        uses: actions/checkout@v2
+        with:
+          repository: rsecurity12/InvisibilityCloak
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: invisibilitycloak-artifacts
+          path: "D:\\a\\Rubeus\\Rubeus\\InvisibilityCloak.py"
+
+      - name: Checkout Rubeus
+        uses: actions/checkout@v2
+        with:
+           repository: rsecurity12/Rubeus
+           
+      - name: Set up .NET 7
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '7.0.101'
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: invisibilitycloak-artifacts
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11  
+
+      - name: Run InvisibilityCloak
+        run: |
+          python D:\\a\\Rubeus\\Rubeus\\InvisibilityCloak.py -d D:\\a\\Rubeus\\Rubeus -n "InvisibilityCloakRubeus" -m base64
+          
+      - name: Build
+        run: |
+          dotnet build --configuration Release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: invisibilitycloakRubeus-artifacts
+          path: "D:\\a\\Rubeus\\Rubeus\\InvisibilityCloakRubeus\\bin\\Release\\InvisibilityCloakRubeus.exe"
+  
+      - name: Checkout ConfuserEx
+        uses: actions/checkout@v2
+        with:
+           repository: rsecurity12/ConfuserEx
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: invisibilitycloakRubeus-artifacts
+          
+      - name: Create a .crproj file                     # You can alter the .crproj file to meet your requirements
+        run: |
+          $xml = @'
+            <project outputDir="D:\\a\\Rubeus\\Rubeus\\Confused" baseDir="D:\\a\\Rubeus\\Rubeus" xmlns="http://confuser.codeplex.com">
+                <module path="InvisibilityCloakRubeus.exe">
+                    <rule pattern="true" preset="maximum" inherit="false">
+                      <protection id="anti debug" />
+                      <protection id="anti dump" />
+                      <protection id="anti ildasm" />
+                      <protection id="anti tamper" />
+                      <protection id="constants" />
+                      <protection id="ctrl flow" />
+                      <protection id="harden" />
+                      <protection id="invalid metadata" />
+                      <protection id="ref proxy" />
+                      <protection id="resources" />
+                      <protection id="typescramble" />
+                      <protection id="rename" />
+                      <protection id="watermark" />
+                  </rule>
+                </module>
+             </project>
+          '@
+          Add-Content -Path "project.crproj" -Value $xml -Encoding UTF8
+
+      - name: Create InvisibilityCloakConfuserEXRubeus      # -n flag means auto confirm 
+        run:  D:\\a\\Rubeus\\Rubeus\\Confuser.CLI.exe -n D:\\a\\Rubeus\\Rubeus\\project.crproj
+
+      - name: Create Release
+        id: create_release_InvisibilityCloakConfuserEXRubeus
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: InvisibilityCloakConfuserEXRubeus
+          release_name: InvisibilityCloakConfuserEXRubeus
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload_asset_InvisibilityCloakConfuserEXRubeus
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release_InvisibilityCloakConfuserEXRubeus.outputs.upload_url }}
+          asset_path: "D:\\a\\Rubeus\\Rubeus\\Confused\\InvisibilityCloakRubeus.exe"
+          asset_name: InvisibilityCloakConfuserEXRubeus.exe
           asset_content_type: application/octet-stream
