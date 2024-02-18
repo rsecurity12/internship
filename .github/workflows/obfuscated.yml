@@ -1,0 +1,221 @@
+ ######################################### SECTION 1 ################################################
+# This section will define the inputs for workflow
+name: obfuscationBuilder
+on:
+  workflow_dispatch:
+    inputs:
+ # -------------------- Obfuscating methods --------------------   
+      invisibilitycloak:
+        description: 'Obfuscator: InvisibilityCloak'
+        type: boolean
+        default: true        
+        
+      confuserEx:
+        type: boolean
+        default: true
+        description: 'Obfuscator: ConfuserEx' 
+
+      invisibilityCloak_encodingMethod:
+        type: choice
+        description: 'InvisibilityCloak obfuscation method'
+        options:
+          - base64
+          - rot13
+          - reverse
+          
+ # -------------------- RedTeam tools to obfuscate -------------------- 
+#      Rubeus:
+#        description: "RedTeam tool: Rubeus"
+#        type: boolean
+#        required: false
+#        default: false
+        
+#      SharpHound:
+#        description: "RedTeam tool: SharpHound"
+#        type: boolean
+#        required: false
+#        default: false
+
+ #     SharpLDAPSearch:
+ #       description: "RedTeam tool: SharpLDAPSearch"
+ #       type: boolean
+ #       required: false
+ #       default: false
+
+  #    SharpUp:
+  #      description: "RedTeam tool: SharpUp"
+  #      type: boolean
+  #      required: false
+  #      default: false
+
+ # -------------------- Project directory --------------------
+      projectdir:
+        description: "Type the project's directory"
+        required: true
+        default: "D:\\\\a\\\\Rubeus\\\\Rubeus"
+
+# -------------------- New tool's name --------------------
+      toolname:
+        description: 'Type the name of your new tool'
+        required: true
+        default: 'Obfuscated'
+
+# -------------------- Tag name & release name --------------------
+      release_name:
+        description: 'Type the release name'
+        required: true
+        default: 'clean_version'
+
+      tag_name:
+        description: 'Type the tag name'
+        required: true
+        default: 'clean_version'
+
+
+######################################### SECTION 2 ################################################
+# This section will create 4 types of Rubeus: Rubeus, InvisibilityCloakRubeus, ConfuserExRubeus, InvisibilityCloakConfuserExRubeus
+jobs:
+    cleanRubeus:
+       runs-on: windows-2019
+       steps:
+# -------------------- Build clean Rubeus --------------------
+        - name: Checkout Rubeus
+          if: "${{ github.event.inputs.invisibilitycloak == 'false' && github.event.inputs.confuserEx == 'false' }}"
+          uses: actions/checkout@v2
+          with:
+            repository: rsecurity12/Rubeus
+
+        - name: Set up .NET 7
+          uses: actions/setup-dotnet@v2
+          with:
+            dotnet-version: '7.0.101'  ## USE DOTNET 4 to build
+
+        - name: Build
+          run: |
+            dotnet build --configuration Release
+
+        - name: Create Release
+          if: "${{ github.event.inputs.invisibilitycloak == 'false' && github.event.inputs.confuserEx == 'false' }}"
+          id: create_clean_release
+          uses: actions/create-release@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            tag_name: "${{ github.event.inputs.tag_name }}"
+            release_name: "${{ github.event.inputs.release_name }}"
+            draft: false
+            prerelease: false
+
+        - name: Upload Release Asset
+          if: "${{ github.event.inputs.invisibilitycloak == 'false' && github.event.inputs.confuserEx == 'false' }}"
+          id: upload_clean_asset
+          uses: actions/upload-release-asset@v1.0.2
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: "${{ steps.create_clean_release.outputs.upload_url }}"
+            asset_path: "${{ github.event.inputs.projectdir }}\\Rubeus\\bin\\Release\\Rubeus.exe"
+            asset_name: "Rubeus.exe"
+            asset_content_type: application/octet-stream
+
+# -------------------- Build invisibilityCloak Rubeus -------------------
+    invisibilityCloakRubeus:
+       runs-on: windows-2019
+       steps:
+        - name: Checkout invisibilitycloak
+          if: "${{ github.event.inputs.invisibilitycloak == 'true' }}"
+          uses: actions/checkout@v2
+          with:
+            repository: rsecurity12/InvisibilityCloak
+
+        - name: Upload Artifacts
+          uses: actions/upload-artifact@v2
+          with:
+            name: invisibilitycloak-artifacts
+            path: "${{ github.event.inputs.projectdir }}\\InvisibilityCloak.py"
+
+        - name: Checkout Rubeus 
+          if: "${{ github.event.inputs.Rubeus == 'true' }}"
+          uses: actions/checkout@v2
+          with:
+            repository: rsecurity12/Rubeus
+
+        - name: Set up .NET 7
+          uses: actions/setup-dotnet@v2
+          with:
+            dotnet-version: '7.0.101'  ## USE DOTNET 4 to build
+
+        - name: Download Artifacts
+          uses: actions/download-artifact@v2
+          with:
+            name: invisibilitycloak-artifacts
+
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.11  
+        
+        - name: Run InvisibilityCloak
+          run: |                                                     
+            python "${{ github.event.inputs.projectdir }}\\InvisibilityCloak.py" -d "${{ github.event.inputs.projectdir }}" -n "${{ github.event.inputs.toolname }}" -m  "${{ github.event.inputs.invisibilityCloak_encodingMethod }}"
+
+        - name: Build
+          run: |
+            dotnet build --configuration Release
+
+        - name: Create Release
+          if: "${{ github.event.inputs.ConfuserEx == 'false' }}"
+          id: create_release
+          uses: actions/create-release@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            tag_name: "${{ github.event.inputs.tag_name }}"
+            release_name: "${{ github.event.inputs.release_name }}"
+            draft: false
+            prerelease: false
+
+        - name: Upload Release Asset
+          if: "${{ github.event.inputs.ConfuserEx == 'false' }}"
+          id: upload_asset
+          uses: actions/upload-release-asset@v1.0.2
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: "${{ github.event.inputs.projectdir }}\\${{ github.event.inputs.toolname }}\\obj\\Release\\${{ github.event.inputs.toolname }}.exe"
+            asset_name: "${{ github.event.inputs.toolname }}.exe"
+            asset_content_type: application/octet-stream
+
+          
+# -------------------- Build ConfuserEx Rubeus -------------------- 
+    ConfuserExRubeus:
+       runs-on: windows-2019
+       steps:
+        - name: Checkout ConfuserEx
+
+# -------------------- Build invisibilityCloakConfuserEx Rubeus --------------------
+    invisibilityCloakConfuserExRubeus:
+       runs-on: windows-2019
+       steps:
+        - name: Checkout ConfuserEx
+
+
+
+
+ #       - name: Debug information
+  #        run: Get-ChildItem .
+
+
+
+######################################### SECTION 3 ################################################
+# This section will define the vaviables for GitHub actions
+
+
+
+# # -------------------- Build and release InvisibilityCloak --------------------
+#         - name: '[InvisibilityCloak] Run' 
+#          if: ${{ inputs.invisibilitycloak }}
+#            run: |
+#               python obfuscation-repo/InvisibilityCloak/InvisibilityCloak.py -d 'target-repo/${{ inputs.projectdir }}' -n '${{ inputs.toolname }}' -m ${{ inputs.method }}
+######  
