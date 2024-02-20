@@ -4,7 +4,7 @@ on:  # Specifies the event triggering the workflow
 ######################################### SECTION 2 ################################################
 # This section will create 4 types of Rubeus: Rubeus, InvisibilityCloakRubeus, ConfuserExRubeus, InvisibilityCloakConfuserExRubeus
 jobs:
-    obfuscateRubeus:
+    cleanRubeus:
        runs-on: windows-2019
        steps:
 # -------------------- Build clean Rubeus --------------------
@@ -48,6 +48,9 @@ jobs:
             asset_content_type: application/octet-stream
 
 # -------------------- Build invisibilityCloak Rubeus -------------------
+    invisibilityCloakRubeus:
+       runs-on: windows-2019
+       steps:
         - name: Checkout InvisibilityCloak
           if: "${{ github.event.inputs.invisibilitycloak == 'true' && github.event.inputs.confuserEx == 'false' }}"
           uses: actions/checkout@v2
@@ -93,198 +96,6 @@ jobs:
 
         - name: Create Release
           if: "${{ github.event.inputs.ConfuserEx == 'false' }}"
-          id: create_invisibilityCloak_release
-          uses: actions/create-release@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: "${{ github.event.inputs.tag_name }}"
-            release_name: "${{ github.event.inputs.release_name }}"
-            draft: false
-            prerelease: false
-
-        - name: Upload Release Asset
-          if: "${{ github.event.inputs.ConfuserEx == 'false' }}"
-          id: upload_asset_invisibilityCloak_asset
-          uses: actions/upload-release-asset@v1.0.2
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_invisibilityCloak_release.outputs.upload_url }}
-            asset_path: "${{ github.event.inputs.projectdir }}\\${{ github.event.inputs.toolname }}\\obj\\Release\\${{ github.event.inputs.toolname }}.exe"
-            asset_name: "${{ github.event.inputs.toolname }}.exe"
-            asset_content_type: application/octet-stream
-
-
-# -------------------- Build ConfuserEx Rubeus -------------------- 
-        - name: Checkout Rubeus
-          if: "${{ github.event.inputs.invisibilitycloak == 'false' && github.event.inputs.confuserEx == 'true' }}"
-          uses: actions/checkout@v2
-          with:
-             repository: rsecurity12/Rubeus
-
-        - name: Set up .NET 7
-          uses: actions/setup-dotnet@v2
-          with:
-            dotnet-version: '7.0.101'
-
-        - name: Build
-          run: |
-            dotnet build --configuration Release
-
-        - name: Upload Artifacts
-          uses: actions/upload-artifact@v2
-          with:
-            name: rubeus-artifacts
-            path: "${{ github.event.inputs.projectdir }}\\Rubeus\\bin\\Release\\Rubeus.exe"
-    
-        - name: Checkout ConfuserEx
-          uses: actions/checkout@v2
-          with:
-            repository: rsecurity12/ConfuserEx
-
-        - name: Download Artifacts
-          uses: actions/download-artifact@v2
-          with:
-            name: rubeus-artifacts
-         
-        - name: Create a .crproj file             # You can alter the .crproj file to meet your requirements
-          run: |
-           $xml = @'                                   
-              <project outputDir="${{ github.event.inputs.projectdir }}\\Rubeus\\Confused" baseDir="${{ github.event.inputs.projectdir }}" xmlns="http://confuser.codeplex.com">
-                 <module path="Rubeus.exe">
-                     <rule pattern="true" preset="maximum" inherit="false">
-                       <protection id="anti debug" />
-                       <protection id="anti dump" />
-                       <protection id="anti ildasm" />
-                       <protection id="anti tamper" />
-                       <protection id="constants" />  
-                       <protection id="ctrl flow" />
-                       <protection id="harden" />
-                       <protection id="invalid metadata" />
-                       <protection id="ref proxy" />
-                       <protection id="resources" />
-                       <protection id="typescramble" />
-                       <protection id="rename" />
-                       <protection id="watermark" />
-                   </rule>
-                 </module>
-              </project>
-           '@
-           Add-Content -Path "project.crproj" -Value $xml -Encoding UTF8
-
-        - name: Create ConfuserEXRubeus                 # -n flag means auto confirm 
-          run:  "${{ github.event.inputs.projectdir }}\\Confuser.CLI.exe -n ${{ github.event.inputs.projectdir }}\\project.crproj"
-
-        - name: Create Release
-          id: create_confuserex_release
-          uses: actions/create-release@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: "${{ github.event.inputs.tag_name }}"
-            release_name: "${{ github.event.inputs.release_name }}"
-            draft: false
-            prerelease: false
-
-        - name: Upload Release Asset
-          id: upload_asset_confuserex
-          uses: actions/upload-release-asset@v1.0.2
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_confuserex_release.outputs.upload_url }}
-            asset_path: "${{ github.event.inputs.projectdir }}\\Rubeus\\Confused\\Rubeus.exe"
-            asset_name: "${{ github.event.inputs.toolname }}.exe"
-            asset_content_type: application/octet-stream
-
-
-# -------------------- Build InvisibilityCloak ConfuserEx Rubeus --------------------
-        - name: Checkout InvisibilityCloak
-          if: "${{ github.event.inputs.invisibilitycloak == 'true' && github.event.inputs.confuserEx == 'true' }}"
-          uses: actions/checkout@v2
-          with:
-           repository: rsecurity12/InvisibilityCloak
-
-        - name: Upload Artifacts
-          uses: actions/upload-artifact@v2
-          with:
-           name: invisibilitycloak-artifacts
-           path: "${{ github.event.inputs.projectdir }}\\InvisibilityCloak.py"
-
-        - name: Checkout Rubeus
-          uses: actions/checkout@v2
-          with:
-             repository: rsecurity12/Rubeus
-           
-        - name: Set up .NET 7
-          uses: actions/setup-dotnet@v2
-          with:
-            dotnet-version: '7.0.101'
-
-        - name: Download Artifacts
-          uses: actions/download-artifact@v2
-          with:
-            name: invisibilitycloak-artifacts
-
-        - name: Set up Python
-          uses: actions/setup-python@v2
-          with:
-            python-version: 3.11  
-
-        - name: Run InvisibilityCloak
-          run: |                                                     
-            python "${{ github.event.inputs.projectdir }}\\InvisibilityCloak.py" -d "${{ github.event.inputs.projectdir }}" -n "${{ github.event.inputs.toolname }}" -m  "${{ github.event.inputs.invisibilityCloak_encodingMethod }}"
-        
-        - name: Build
-          run: |
-             dotnet build --configuration Release
-
-        - name: Upload Artifacts
-          uses: actions/upload-artifact@v2
-          with:
-            name: invisibilitycloakRubeus-artifacts
-            path: "${{ github.event.inputs.projectdir }}\\${{ github.event.inputs.toolname }}\\bin\\Release\\${{ github.event.inputs.toolname }}.exe"
-  
-        - name: Checkout ConfuserEx
-          uses: actions/checkout@v2
-          with:
-             repository: rsecurity12/ConfuserEx
-
-        - name: Download Artifacts
-          uses: actions/download-artifact@v2
-          with:
-            name: invisibilitycloakRubeus-artifacts
-
-        - name: Create a .crproj file             # You can alter the .crproj file to meet your requirements
-          run: |
-           $xml = @'                                   
-              <project outputDir="${{ github.event.inputs.projectdir }}\\Rubeus\\Confused" baseDir="${{ github.event.inputs.projectdir }}" xmlns="http://confuser.codeplex.com">
-                 <module path="${{ github.event.inputs.toolname }}.exe">
-                     <rule pattern="true" preset="maximum" inherit="false">
-                       <protection id="anti debug" />
-                       <protection id="anti dump" />
-                       <protection id="anti ildasm" />
-                       <protection id="anti tamper" />
-                       <protection id="constants" />  
-                       <protection id="ctrl flow" />
-                       <protection id="harden" />
-                       <protection id="invalid metadata" />
-                       <protection id="ref proxy" />
-                       <protection id="resources" />
-                       <protection id="typescramble" />
-                       <protection id="rename" />
-                       <protection id="watermark" />
-                   </rule>
-                 </module>
-              </project>
-           '@
-           Add-Content -Path "project.crproj" -Value $xml -Encoding UTF8
-
-        - name: Create ConfuserEXRubeus                 # -n flag means auto confirm 
-          run: "${{ github.event.inputs.projectdir }}\\Confuser.CLI.exe -n ${{ github.event.inputs.projectdir }}\\project.crproj"
-
-        - name: Create Release
           id: create_release
           uses: actions/create-release@v1
           env:
@@ -296,12 +107,210 @@ jobs:
             prerelease: false
 
         - name: Upload Release Asset
+          if: "${{ github.event.inputs.ConfuserEx == 'false' }}"
           id: upload_asset
           uses: actions/upload-release-asset@v1.0.2
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: "${{ github.event.inputs.projectdir }}\\Rubeus\\Confused\\${{ github.event.inputs.toolname }}.exe"
+            asset_path: "${{ github.event.inputs.projectdir }}\\${{ github.event.inputs.toolname }}\\obj\\Release\\${{ github.event.inputs.toolname }}.exe"
             asset_name: "${{ github.event.inputs.toolname }}.exe"
             asset_content_type: application/octet-stream
+
+
+# -------------------- Build ConfuserEx Rubeus -------------------- 
+    ConfuserExRubeus:
+       runs-on: windows-2019
+       steps:
+       - name: Checkout Rubeus
+         if: "${{ github.event.inputs.invisibilitycloak == 'false' && github.event.inputs.confuserEx == 'true' }}"
+         uses: actions/checkout@v2
+         with:
+            repository: rsecurity12/Rubeus
+
+       - name: Set up .NET 7
+         uses: actions/setup-dotnet@v2
+         with:
+           dotnet-version: '7.0.101'
+
+       - name: Build
+         run: |
+           dotnet build --configuration Release
+
+       - name: Upload Artifacts
+         uses: actions/upload-artifact@v2
+         with:
+           name: rubeus-artifacts
+           path: "${{ github.event.inputs.projectdir }}\\Rubeus\\bin\\Release\\Rubeus.exe"
+    
+       - name: Checkout ConfuserEx
+         uses: actions/checkout@v2
+         with:
+           repository: rsecurity12/ConfuserEx
+
+       - name: Download Artifacts
+         uses: actions/download-artifact@v2
+         with:
+           name: rubeus-artifacts
+         
+       - name: Create a .crproj file             # You can alter the .crproj file to meet your requirements
+         run: |
+          $xml = @'                                   
+             <project outputDir="${{ github.event.inputs.projectdir }}\\Rubeus\\Confused" baseDir="${{ github.event.inputs.projectdir }}" xmlns="http://confuser.codeplex.com">
+                <module path="Rubeus.exe">
+                    <rule pattern="true" preset="maximum" inherit="false">
+                      <protection id="anti debug" />
+                      <protection id="anti dump" />
+                      <protection id="anti ildasm" />
+                      <protection id="anti tamper" />
+                      <protection id="constants" />  
+                      <protection id="ctrl flow" />
+                      <protection id="harden" />
+                      <protection id="invalid metadata" />
+                      <protection id="ref proxy" />
+                      <protection id="resources" />
+                      <protection id="typescramble" />
+                      <protection id="rename" />
+                      <protection id="watermark" />
+                  </rule>
+                </module>
+             </project>
+          '@
+          Add-Content -Path "project.crproj" -Value $xml -Encoding UTF8
+
+       - name: Create ConfuserEXRubeus                 # -n flag means auto confirm 
+         run:  "${{ github.event.inputs.projectdir }}\\Confuser.CLI.exe -n ${{ github.event.inputs.projectdir }}\\project.crproj"
+
+       - name: Create Release
+         id: create_release
+         uses: actions/create-release@v1
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         with:
+           tag_name: "${{ github.event.inputs.tag_name }}"
+           release_name: "${{ github.event.inputs.release_name }}"
+           draft: false
+           prerelease: false
+
+       - name: Upload Release Asset
+         id: upload_asset
+         uses: actions/upload-release-asset@v1.0.2
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         with:
+           upload_url: ${{ steps.create_release.outputs.upload_url }}
+           asset_path: "${{ github.event.inputs.projectdir }}\\Rubeus\\Confused\\Rubeus.exe"
+           asset_name: "${{ github.event.inputs.toolname }}.exe"
+           asset_content_type: application/octet-stream
+
+
+# -------------------- Build InvisibilityCloak ConfuserEx Rubeus --------------------
+    InvisibilityCloakConfuserExRubeus:
+     runs-on: windows-2019
+     steps:  
+     - name: Checkout InvisibilityCloak
+       if: "${{ github.event.inputs.invisibilitycloak == 'true' && github.event.inputs.confuserEx == 'true' }}"
+       uses: actions/checkout@v2
+       with:
+         repository: rsecurity12/InvisibilityCloak
+
+     - name: Upload Artifacts
+       uses: actions/upload-artifact@v2
+       with:
+         name: invisibilitycloak-artifacts
+         path: "${{ github.event.inputs.projectdir }}\\InvisibilityCloak.py"
+
+     - name: Checkout Rubeus
+       uses: actions/checkout@v2
+       with:
+          repository: rsecurity12/Rubeus
+           
+     - name: Set up .NET 7
+       uses: actions/setup-dotnet@v2
+       with:
+         dotnet-version: '7.0.101'
+
+     - name: Download Artifacts
+       uses: actions/download-artifact@v2
+       with:
+         name: invisibilitycloak-artifacts
+
+     - name: Set up Python
+       uses: actions/setup-python@v2
+       with:
+         python-version: 3.11  
+
+     - name: Run InvisibilityCloak
+       run: |                                                     
+         python "${{ github.event.inputs.projectdir }}\\InvisibilityCloak.py" -d "${{ github.event.inputs.projectdir }}" -n "${{ github.event.inputs.toolname }}" -m  "${{ github.event.inputs.invisibilityCloak_encodingMethod }}"
+        
+     - name: Build
+       run: |
+          dotnet build --configuration Release
+
+     - name: Upload Artifacts
+       uses: actions/upload-artifact@v2
+       with:
+         name: invisibilitycloakRubeus-artifacts
+         path: "${{ github.event.inputs.projectdir }}\\${{ github.event.inputs.toolname }}\\bin\\Release\\${{ github.event.inputs.toolname }}.exe"
+  
+     - name: Checkout ConfuserEx
+       uses: actions/checkout@v2
+       with:
+          repository: rsecurity12/ConfuserEx
+
+     - name: Download Artifacts
+       uses: actions/download-artifact@v2
+       with:
+         name: invisibilitycloakRubeus-artifacts
+
+     - name: Create a .crproj file             # You can alter the .crproj file to meet your requirements
+       run: |
+        $xml = @'                                   
+           <project outputDir="${{ github.event.inputs.projectdir }}\\Rubeus\\Confused" baseDir="${{ github.event.inputs.projectdir }}" xmlns="http://confuser.codeplex.com">
+              <module path="${{ github.event.inputs.toolname }}.exe">
+                  <rule pattern="true" preset="maximum" inherit="false">
+                    <protection id="anti debug" />
+                    <protection id="anti dump" />
+                    <protection id="anti ildasm" />
+                    <protection id="anti tamper" />
+                    <protection id="constants" />  
+                    <protection id="ctrl flow" />
+                    <protection id="harden" />
+                    <protection id="invalid metadata" />
+                    <protection id="ref proxy" />
+                    <protection id="resources" />
+                    <protection id="typescramble" />
+                    <protection id="rename" />
+                    <protection id="watermark" />
+                </rule>
+              </module>
+           </project>
+        '@
+        Add-Content -Path "project.crproj" -Value $xml -Encoding UTF8
+
+     - name: Create ConfuserEXRubeus                 # -n flag means auto confirm 
+       run:  "${{ github.event.inputs.projectdir }}\\Confuser.CLI.exe -n ${{ github.event.inputs.projectdir }}\\project.crproj"
+
+     - name: Create Release
+       id: create_release
+       uses: actions/create-release@v1
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       with:
+         tag_name: "${{ github.event.inputs.tag_name }}"
+         release_name: "${{ github.event.inputs.release_name }}"
+         draft: false
+         prerelease: false
+
+     - name: Upload Release Asset
+       id: upload_asset
+       uses: actions/upload-release-asset@v1.0.2
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       with:
+         upload_url: ${{ steps.create_release.outputs.upload_url }}
+         asset_path: "${{ github.event.inputs.projectdir }}\\Rubeus\\Confused\\${{ github.event.inputs.toolname }}.exe"
+         asset_name: "${{ github.event.inputs.toolname }}.exe"
+         asset_content_type: application/octet-stream
