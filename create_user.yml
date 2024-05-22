@@ -1,6 +1,6 @@
 ---
 - name: Create a user on Windows
-  hosts: windows
+  hosts: hosts
   tasks:
     - name: Ensure the user exists
       ansible.windows.win_user:
