@@ -1,4 +1,4 @@
 ---
 - collections: Install necessary Ansible collections
-  - microsoft.ad
-  - community.windows
+  - 'microsoft.ad'
+  - 'community.windows'
