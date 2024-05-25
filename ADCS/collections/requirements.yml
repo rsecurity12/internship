@@ -1,4 +1,6 @@
 ---
 collections:
-  - 'microsoft.ad'
-  - 'community.windows'
+  - name: microsoft.ad
+  - name: community.windows
+#  - 'microsoft.ad'
+#  - 'community.windows'
