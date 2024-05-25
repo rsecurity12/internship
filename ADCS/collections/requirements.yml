@@ -1,13 +1,4 @@
 ---
-- name: Install necessary Ansible collections
-  hosts: localhost
-  gather_facts: no
-  become: yes
-  tasks:
-    - name: Install microsoft.ad collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install microsoft.ad
-
-    - name: Install community.windows collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install community.windows
+- collections: Install necessary Ansible collections
+  - microsoft.ad
+  - community.windows
