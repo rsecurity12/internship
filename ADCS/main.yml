@@ -1,13 +1,12 @@
 ---
-  - name: Setup
-    hosts: all
-    become: yes
-    roles:
-      - dependencies
+#  - name: Setup
+#    hosts: all
+#    become: yes
+#    roles:
+#      - dependencies
 
   - name: Creating Purple Teaming Lab With Automations
     hosts: win_host
-    become: yes
     tasks:
       - name: Include encrypted variables
         include_vars:
