@@ -1,0 +1,6 @@
+---
+- name: Install Microsoft AD collection
+  ansible.builtin.command: ansible-galaxy collection install microsoft.ad
+
+- name: Install Community Windows collection
+  ansible.builtin.command: ansible-galaxy collection install community.windows
