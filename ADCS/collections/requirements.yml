@@ -1,16 +1,4 @@
-name: AD Integration Pipeline
+collections:
+  - name: community.general
+    version: 3.9.0
 
-agent:
-  machine:
-    type: e1-standard-2
-    os_image: ubuntu2004
-
-blocks:
-  - name: Install Dependencies
-    task:
-      jobs:
-        - name: Install Ansible and Collections
-          commands:
-            - sudo apt-get update
-            - sudo apt-get install -y ansible
-            - ansible-galaxy collection install community.general:3.9.0
