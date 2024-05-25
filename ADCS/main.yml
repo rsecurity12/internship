@@ -1,7 +1,10 @@
 ---
 - name: Creating Purple Teaming Lab With Automations
   hosts: win_host
-  role: dependencies
+  become: yes
+  roles:
+    - dependencies
+    
   tasks:
   - name: Include encrypted variables
     include_vars:
