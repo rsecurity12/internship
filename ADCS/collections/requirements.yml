@@ -5,5 +5,5 @@ collections:
   - 'microsoft.ad'
   - 'community.windows'
 
-roles:
-  - src: 'namespace.role'
+#roles:
+#  - src: 'namespace.role'
