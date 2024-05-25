@@ -3,4 +3,4 @@
   hosts: all
   become: yes
 - name: Install Microsoft AD collection
-  command: ansible-galaxy collection install microsoft.ad
+  ansible.builtin.shell: ansible-galaxy collection install microsoft.ad
