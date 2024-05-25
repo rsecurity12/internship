@@ -2,7 +2,7 @@
 - name: Playbook to install collections
   hosts: all
   roles:
-    - install_collections
+    - dependencies
 
 - name: Creating Purple Teaming Lab With Automations
   hosts: win_host
