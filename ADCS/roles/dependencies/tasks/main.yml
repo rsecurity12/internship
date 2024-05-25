@@ -1,10 +1,12 @@
 ---
-- name: Install Microsoft AD collection
+- name: Install Microsoft AD and Community Windows collections
   hosts: all
   become: yes
-  tasks: 
-    - name: install dependencies
-      ansible.builtin.command: ansible-galaxy collection install microsoft.ad
+  tasks:
+    - name: Install Microsoft AD collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install microsoft.ad
 
     - name: Install Community Windows collection
-      ansible.builtin.command: ansible-galaxy collection install community.windows
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install community.windows
