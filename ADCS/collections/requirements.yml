@@ -1,9 +1,9 @@
----
-collections:
-  - 'namespace.collection'
-  # for common collections:
-  - 'microsoft.ad'
-  - 'community.windows'
+#---
+#collections:
+#  - 'namespace.collection'
+#  # for common collections:
+#  - 'microsoft.ad'
+#  - 'community.windows'
 
 #roles:
 #  - src: 'namespace.role'
