@@ -1,6 +1,6 @@
 ---
 - name: Install necessary Ansible collections
-  hosts: localhost
+  hosts: win_host
   gather_facts: no
   tasks:
     - name: Install microsoft.ad collection
