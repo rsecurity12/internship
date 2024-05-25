@@ -1,15 +1,8 @@
 ---
-- name: Install necessary Ansible collections
-  hosts: win_host
-  gather_facts: no
-  tasks:
-    - name: Install microsoft.ad collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install microsoft.ad
-
-    - name: Install community.windows collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install community.windows
+- name: Playbook to install collections
+  hosts: all
+  roles:
+    - install_collections
 
 - name: Creating Purple Teaming Lab With Automations
   hosts: win_host
