@@ -1,5 +1,5 @@
 ---
-- name: Creating Purple Team Lab With Automations
+- name: Creating Purple Teaming Lab With Automations
   hosts: win_host
 
   tasks:
