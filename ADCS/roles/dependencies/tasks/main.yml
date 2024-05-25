@@ -2,8 +2,7 @@
 - name: Playbook to install Microsoft AD collection
   hosts: all
   become: yes
-  tasks:
-    - name: Install Microsoft AD collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install microsoft.ad
+  - name: Install Microsoft AD collection
+    ansible.builtin.command:
+      cmd: ansible-galaxy collection install microsoft.ad
 
