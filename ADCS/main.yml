@@ -1,15 +1,7 @@
 ---
-- name: Playbook to install collections
-  hosts: all
-  become: yes
-  tasks:
-    - name: Install Microsoft AD collection
-      ansible.builtin.command:
-        cmd: ansible-galaxy collection install microsoft.ad
-
 - name: Creating Purple Teaming Lab With Automations
   hosts: win_host
-
+  become: yes
   tasks:
   - name: Include encrypted variables
     include_vars:
