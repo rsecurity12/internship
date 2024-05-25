@@ -4,15 +4,15 @@
   become: yes
   roles:
     - dependencies
-    
 
 - name: Creating Purple Teaming Lab With Automations
-  hosts: win_host   
+  hosts: win_host
+  become: yes
   tasks:
-  - name: Include encrypted variables
-    include_vars:
-       file: ./secrets.yml
-    #  file: /home/administrator/Desktop/ansible_project/playbooks/vars/secrets.yml
+    - name: Include encrypted variables
+      include_vars:
+        file: ./secrets.yml
+      # file: /home/administrator/Desktop/ansible_project/playbooks/vars/secrets.yml
 
   - name: Set Hostname Variable
     set_fact:
