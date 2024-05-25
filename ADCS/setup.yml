@@ -1,0 +1,12 @@
+---
+- name: Install necessary Ansible collections
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Install microsoft.ad collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install microsoft.ad
+
+    - name: Install community.windows collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install community.windows
