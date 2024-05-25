@@ -1,5 +1,0 @@
-- name: Run ipconfig on Windows
-  hosts: hosts
-  tasks:
-    - name: Execute ipconfig
-      ansible.windows.win_shell: ipconfig
