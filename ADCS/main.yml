@@ -4,13 +4,13 @@
   gather_facts: no
 
   tasks:
-  - name: Include encrypted variables
-    include_vars:
-      file: "/ADCS/secrets.yml"
+#  - name: Include encrypted variables
+#    include_vars:
+#      file: "/ADCS/secrets.yml"
 
-  - name: Set Hostname Variable
-    set_fact:
-      hostname: "{{ ansible_hostname }}"
+#  - name: Set Hostname Variable
+#    set_fact:
+#      hostname: "{{ ansible_hostname }}"
 
   - name: Create new domain in a new forest on the target host
     microsoft.ad.domain:
