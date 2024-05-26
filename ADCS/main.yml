@@ -9,7 +9,7 @@
       script: |
         Install-WindowsFeature AD-Domain-Services
         Import-Module ADDSDeployment
-        Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath “C:\Windows\NTDS” -DomainMode “Default” -DomainName “purplelab.local” -DomainNetbiosName PURPLELAB -ForestMode “Default” -InstallDns:$true -LogPath “C:\Windows\NTDS” -NoRebootOnCompletion:$false -SysvolPath “C:\Windows\SYSVOL” -Force:$true
+        Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\Windows\NTDS" -DomainMode "Default" -DomainName "purplelab.local" -DomainNetbiosName PURPLELAB -ForestMode "Default" -InstallDns:$true -LogPath "C:\Windows\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\Windows\SYSVOL" -Force:$true
 
 #  - name: Include encrypted variables
 #    include_vars:
@@ -38,9 +38,9 @@
 #      install_dns: true
 #    register: domain_install
 
-  - name: Reboot host if install requires it
-    ansible.windows.win_reboot:
-    when: domain_install.reboot_required
+#  - name: Reboot host if install requires it
+#    ansible.windows.win_reboot:
+#    when: domain_install.reboot_required
 
   - name: Creating users and groups
     ansible.windows.win_powershell:
