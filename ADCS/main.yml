@@ -13,7 +13,6 @@
 
   - name: Reboot the machine
     win_reboot:
-      timeout: 5  # Timeout in seconds for the machine to come back online
       msg: "Reboot initiated by Ansible"
       pre_reboot_delay: 0
 #  - name: Include encrypted variables
