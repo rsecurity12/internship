@@ -7,9 +7,6 @@
     include_vars:
       file: /home/administrator/Desktop/ansible_project/playbooks/vars/secrets.yml
       
-  - name: install winrm
-    command: pip install pywinrm requests
-
   - name: Set Hostname Variable
     set_fact:
       hostname: "{{ ansible_hostname }}"
