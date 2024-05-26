@@ -4,9 +4,9 @@
   gather_facts: no
 
   tasks:
-#  - name: Include encrypted variables
-#    include_vars:
-#      file: "./secrets.yml"
+  - name: Include encrypted variables
+    include_vars:
+      file: "./secrets.yml"
 
   - name: Set Hostname Variable
     set_fact:
