@@ -11,8 +11,8 @@
         Import-Module ADDSDeployment
         Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\Windows\NTDS" -DomainMode "Default" -DomainName "pwc.com" -DomainNetbiosName PWC -ForestMode "Default" -InstallDns:$true -LogPath "C:\Windows\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\Windows\SYSVOL" -Force:$true
 
- - name: Reboot the machine
-   win_reboot:
+  - name: Reboot the machine
+    win_reboot:
       timeout: 5  # Timeout in seconds for the machine to come back online
       msg: "Reboot initiated by Ansible"
       pre_reboot_delay: 0
