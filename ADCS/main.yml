@@ -11,11 +11,18 @@
     set_fact:
       hostname: "{{ ansible_hostname }}"
 
-  - name: Create new domain in a new forest on the target host
-    microsoft.ad.domain:
-      dns_domain_name: pwc.com
-      safe_mode_password: Password1!
-      reboot: true
+  - name: Run basic PowerShell script
+    ansible.windows.win_powershell:
+      script: |
+          Install-WindowsFeature AD-Domain-Services
+          Import-Module ADDSDeployment
+          Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath “C:\Windows\NTDS” -DomainMode “Default” -DomainName “purplelab.local” -DomainNetbiosName PURPLELAB -ForestMode “Default” -InstallDns:$true -LogPath “C:\Windows\NTDS” -NoRebootOnCompletion:$false -SysvolPath “C:\Windows\SYSVOL” -Force:$true
+
+#  - name: Create new domain in a new forest on the target host
+#    microsoft.ad.domain:
+#      dns_domain_name: pwc.com
+#      safe_mode_password: Password1!
+#      reboot: true
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
