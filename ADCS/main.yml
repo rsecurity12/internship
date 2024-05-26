@@ -4,12 +4,12 @@
   gather_facts: no
 
   tasks:
-  - name: Run basic PowerShell script
-    ansible.windows.win_powershell:
-      script: |
-        Install-WindowsFeature AD-Domain-Services
-        Import-Module ADDSDeployment
-        Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\Windows\NTDS" -DomainMode "Default" -DomainName "pwc.com" -DomainNetbiosName PWC -ForestMode "Default" -InstallDns:$true -LogPath "C:\Windows\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\Windows\SYSVOL" -Force:$true
+#  - name: Run basic PowerShell script
+#    ansible.windows.win_powershell:
+#      script: |
+#        Install-WindowsFeature AD-Domain-Services
+#        Import-Module ADDSDeployment
+#        Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\Windows\NTDS" -DomainMode "Default" -DomainName "pwc.com" -DomainNetbiosName PWC -ForestMode "Default" -InstallDns:$true -LogPath "C:\Windows\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\Windows\SYSVOL" -Force:$true
 
 #  - name: Include encrypted variables
 #    include_vars:
@@ -19,28 +19,28 @@
 #    set_fact:
 #      hostname: "{{ ansible_hostname }}"
 
-#  - name: Create new domain in a new forest on the target host
-#    microsoft.ad.domain:
-#      dns_domain_name: pwc.com
-#      safe_mode_password: Password1!
-#      reboot: true
+  - name: Create new domain in a new forest on the target host
+    microsoft.ad.domain:
+      dns_domain_name: pwc.com
+      safe_mode_password: Password1!
+      reboot: true
 
-#  - name: Create new Windows domain in a new forest with specific parameters
-#    microsoft.ad.domain:
-#      create_dns_delegation: false
-#      database_path: C:\Windows\NTDS
-#      dns_domain_name: pwc.com
-#      domain_mode: Win2012R2
-#      domain_netbios_name: PWC
-#      forest_mode: Win2012R2
-#      safe_mode_password: Password1!
-#      sysvol_path: C:\Windows\SYSVOL
-#      install_dns: true
-#    register: domain_install
+  - name: Create new Windows domain in a new forest with specific parameters
+    microsoft.ad.domain:
+      create_dns_delegation: false
+      database_path: C:\Windows\NTDS
+      dns_domain_name: pwc.com
+      domain_mode: Win2012R2
+      domain_netbios_name: PWC
+      forest_mode: Win2012R2
+      safe_mode_password: Password1!
+      sysvol_path: C:\Windows\SYSVOL
+      install_dns: true
+    register: domain_install
 
-#  - name: Reboot host if install requires it
-#    ansible.windows.win_reboot:
-#    when: domain_install.reboot_required
+  - name: Reboot host if install requires it
+    ansible.windows.win_reboot:
+    when: domain_install.reboot_required
 
   - name: Creating users and groups
     ansible.windows.win_powershell:
