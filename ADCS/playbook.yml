@@ -12,52 +12,21 @@
 
   - name: Create new domain in a new forest on the target host and reboot
     microsoft.ad.domain:
-      dns_domain_name: pwc.com
-      safe_mode_password: password1!
+      dns_domain_name: purple.local
+      safe_mode_password: Password1!
       reboot: true
 
-  - name: Create new domain in a new forest on the target host
-    win_shell: |
-      Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
-      Install-ADDSForest -DomainName "pwc.com" -SafeModeAdministratorPassword (ConvertTo-SecureString "Password1!" -AsPlainText -Force) -Force -NoRebootOnCompletion
-    register: domain_creation
-
-#  - name: Reboot the server
-#    win_reboot:
-#    when: domain_creation is succeeded
-
-#  - name: Create new domain in a new forest on the target host
-#    microsoft.ad.domain:
-#      dns_domain_name: pwc.com
-#      safe_mode_password: Password1!
-#      reboot: true
-
-#  - name: Create new domain in a new forest on the target host
-#    win_command: |
-#      Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
-#      Install-ADDSForest `
-#        -DomainName "pwc.com" `
-#        -SafeModeAdministratorPassword (ConvertTo-SecureString "Password1!" -AsPlainText -Force) `
-#        -Force `
-#        -NoRebootOnCompletion
-#    register: domain_creation
-
-#  - name: Reboot the server
-#    win_reboot:
-#    when: domain_creation is succeeded
-
-  - name: Create new Windows domain in a new forest with specific parameters
+  - name: Create new Windows domain in a new forest with specific parameters and reboot in post task
     microsoft.ad.domain:
       create_dns_delegation: false
       database_path: C:\Windows\NTDS
-      dns_domain_name: pwc.com
+      dns_domain_name: purple.local
       domain_mode: Win2012R2
-      domain_netbios_name: PWC
+      domain_netbios_name: PURPLE
       forest_mode: Win2012R2
       safe_mode_password: Password1!
       sysvol_path: C:\Windows\SYSVOL
-      install_dns: true
-    register: domain_install
+   register: domain_install
 
   - name: Reboot host if install requires it
     ansible.windows.win_reboot:
