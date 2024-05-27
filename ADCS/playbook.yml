@@ -12,6 +12,11 @@
   - name: Set Hostname Variable
     set_fact:
       hostname: "{{ ansible_hostname }}"
+      
+  - name: Install AD DS Forest
+    win_shell: |
+      Install-WindowsFeature -Name RSAT-AD-PowerShell -IncludeAllSubFeature
+
 
   - name: features | Installing RSAT
     win_feature:
