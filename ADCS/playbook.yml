@@ -4,22 +4,15 @@
   gather_facts: yes
   vars:
     hostname: "{{ ansible_hostname }}"
-#    ansible_winrm_operation_timeout_sec: 1800
-#    ansible_winrm_read_timeout_sec: 300
-#    ansible_winrm_operation_timeout_sec: 200
+    ansible_winrm_operation_timeout_sec: 1800
+    ansible_winrm_read_timeout_sec: 300
+    ansible_winrm_operation_timeout_sec: 200
 
   tasks:
-  - name: Set Hostname Variable
-    set_fact:
-      hostname: "{{ ansible_hostname }}"
+#  - name: Set Hostname Variable
+#    set_fact:
+#      hostname: "{{ ansible_hostname }}"
       
-  - name: features | Installing RSAT
-    win_feature:
-      name: RSAT
-      include_sub_features: yes
-      include_management_tools: yes
-      state: present
-
   - name: Create new domain in a new forest on the target host and reboot
     microsoft.ad.domain:
       dns_domain_name: purple.local
@@ -187,6 +180,13 @@
 #        Install-AdcsOnlineResponder -Force -Confirm:$false
 #    become_user: purple\Administrator
 #    register: install_result
+
+  - name: features | Installing RSAT
+    win_feature:
+      name: RSAT
+      include_sub_features: yes
+      include_management_tools: yes
+      state: present
 
   - name: Install NuGet package provider
     ansible.windows.win_powershell:
