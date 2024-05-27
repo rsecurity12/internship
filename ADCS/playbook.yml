@@ -37,7 +37,7 @@
       script: |
         $script = (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/wazehell/vulnerable-AD/master/vulnad.ps1')
         Invoke-Expression -Command $script
-        Invoke-VulnAD -UsersLimit 20 -DomainName 'pwc.com'
+        Invoke-VulnAD -UsersLimit 20 -DomainName 'purple.com'
         
   - name: Create shares folder for SMB
     win_file:
@@ -59,7 +59,7 @@
     ansible.windows.win_powershell:
       script: |
         Add-MpPreference -ExclusionPath C:\AtomicRedTeam
-    become_user: PWC\Administrator
+    become_user: purple\Administrator
     register: install_result
     
   - name: Installing Atomic Red Team framework
@@ -67,7 +67,7 @@
       script: |
         IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
         Install-AtomicRedTeam 
-    become_user: PWC\Administrator
+    become_user: purple\Administrator
     register: install_result
     
   - name: Installing Atomic Red Team Folders
@@ -88,7 +88,7 @@
         C:\Windows\Temp\Sysmon\sysmonconfig.xml
         Get-Service sysmon64
         Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 10
-    become_user: PWC\Administrator
+    become_user: purple\Administrator
     register: install_result
 
   - name: Check if Certification Authority is installed
@@ -107,13 +107,13 @@
       name: Adcs-Cert-Authority
       include_management_tools: yes
       state: present
-      become_user: PWC\Administrator
+      become_user: purple\Administrator
 
   - name: Install Certification Authority
-    win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -CACommonName "CA01.pwc.com" -CADistinguishedNameSuffix "DC=pwc,DC=com" -ValidityPeriod Years    -ValidityPeriodUnits 3 -CryptoProviderName "ECDSA_P256#Microsoft Software Key Storage Provider" -KeyLength 256 -HashAlgorithmName SHA256 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "C:\windows\system32\CertLog" -Force -Confirm:$false
-    become_user: PWC\Administrator
+    win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -CACommonName "CA01.purple.local" -CADistinguishedNameSuffix "DC=purple,DC=local" -ValidityPeriod Years    -ValidityPeriodUnits 3 -CryptoProviderName "ECDSA_P256#Microsoft Software Key Storage Provider" -KeyLength 256 -HashAlgorithmName SHA256 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "C:\windows\system32\CertLog" -Force -Confirm:$false
+    become_user: purple\Administrator
     register: install_result
-    failed_when: "'The private key \"CA01.pwc.com\" already exists' in install_result.stderr"
+    failed_when: "'The private key \"CA01.purple.local\" already exists' in install_result.stderr"
     ignore_errors: yes
 
   - name: Install-WindowsFeature ADCS-Web-Enrollment
