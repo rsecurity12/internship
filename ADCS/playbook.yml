@@ -13,18 +13,18 @@
     set_fact:
       hostname: "{{ ansible_hostname }}"
 
-  - name: Create new domain in a new forest on the target host and reboot
-    microsoft.ad.domain:
-      dns_domain_name: purple.local
-      safe_mode_password: Password1!
+#  - name: Create new domain in a new forest on the target host and reboot
+#    microsoft.ad.domain:
+#      dns_domain_name: purple.local
+#      safe_mode_password: Password1!
 #      reboot: true
 
-  - name: Create new domain in a new forest on the target host and reboot
-    win_reboot:
-      connect_timeout: 15
-      post_reboot_delay: 180 # Wait for 30 seconds before starting to check
-      msg: "Reboot after domain creation"
-      reboot_timeout: 900 # Total time to wait for the reboot to complete
+#  - name: Create new domain in a new forest on the target host and reboot
+#    win_reboot:
+#      connect_timeout: 15
+#      post_reboot_delay: 180 # Wait for 30 seconds before starting to check
+#      msg: "Reboot after domain creation"
+#      reboot_timeout: 900 # Total time to wait for the reboot to complete
 
 
 
