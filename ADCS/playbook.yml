@@ -26,7 +26,7 @@
       forest_mode: Win2012R2
       safe_mode_password: Password1!
       sysvol_path: C:\Windows\SYSVOL
-   register: domain_install
+    register: domain_install
 
   - name: Reboot host if install requires it
     ansible.windows.win_reboot:
