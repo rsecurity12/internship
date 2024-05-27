@@ -187,7 +187,10 @@
     ansible.windows.win_powershell:
       script: |
         $fileNames = @(
-          "sales.json"
+          "ESC3-1.json",
+          "ESC3-2.json",
+          "ESC3-3.json",
+          "ESC3-4.json",
          )
          $baseURL = "https://raw.githubusercontent.com/rsecurity12/internship/main/vulnerable-templates/"
          
