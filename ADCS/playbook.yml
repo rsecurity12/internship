@@ -26,9 +26,9 @@
         -NoRebootOnCompletion
     register: domain_creation
 
-    - name: Reboot the server
-      win_reboot:
-      when: domain_creation is succeeded
+  - name: Reboot the server
+    win_reboot:
+    when: domain_creation is succeeded
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
