@@ -13,6 +13,13 @@
     set_fact:
       hostname: "{{ ansible_hostname }}"
 
+  - name: features | Installing RSAT
+    win_feature:
+      name: RSAT
+      include_sub_features: yes
+      include_management_tools: yes
+      state: present
+
   - name: Install AD DS Forest
     win_shell: |
       Import-Module ActiveDirectory
@@ -191,13 +198,6 @@
          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
     become_user: purple\Administrator
     register: install_result
-
-  - name: features | Installing RSAT
-    win_feature:
-      name: RSAT
-      include_sub_features: yes
-      include_management_tools: yes
-      state: present
 
   - name: Install ADCSTemplate Module
     win_copy:
