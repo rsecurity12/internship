@@ -1,6 +1,9 @@
 ---
 - name: Creating Purple Team Lab With Automations
   hosts: win_host
+  gather_facts: yes
+  vars:
+    hostname: "{{ ansible_hostname }}"
 
   tasks:
   - name: Set Hostname Variable
