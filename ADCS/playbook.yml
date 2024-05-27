@@ -13,12 +13,6 @@
     set_fact:
       hostname: "{{ ansible_hostname }}"
       
-  - name: Install AD DS Forest
-    win_shell: |
-      Install-WindowsFeature -Name RSAT-AD-PowerShell -IncludeAllSubFeature
-      Import-Module ActiveDirectory
-
-
   - name: features | Installing RSAT
     win_feature:
       name: RSAT
@@ -26,15 +20,11 @@
       include_management_tools: yes
       state: present
 
-  - name: Install AD DS Forest
-    win_shell: |
-      Import-Module ActiveDirectory
-
   - name: Create new domain in a new forest on the target host and reboot
     microsoft.ad.domain:
       dns_domain_name: purple.local
       safe_mode_password: Password1!
-#      reboot: true
+      reboot: true
 
 #  - name: Create new domain in a new forest on the target host and reboot
 #    win_reboot:
