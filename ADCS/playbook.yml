@@ -13,10 +13,14 @@
     set_fact:
       hostname: "{{ ansible_hostname }}"
 
-#  - name: Create new domain in a new forest on the target host and reboot
-#    microsoft.ad.domain:
-#      dns_domain_name: purple.local
-#      safe_mode_password: Password1!
+  - name: Install AD DS Forest
+    win_shell: |
+      Import-Module ActiveDirectory
+
+  - name: Create new domain in a new forest on the target host and reboot
+    microsoft.ad.domain:
+      dns_domain_name: purple.local
+      safe_mode_password: Password1!
 #      reboot: true
 
 #  - name: Create new domain in a new forest on the target host and reboot
