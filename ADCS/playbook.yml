@@ -24,7 +24,7 @@
         -SafeModeAdministratorPassword (ConvertTo-SecureString "Password1!" -AsPlainText -Force) `
         -Force `
         -NoRebootOnCompletion
-   register: domain_creation
+    register: domain_creation
 
     - name: Reboot the server
       win_reboot:
