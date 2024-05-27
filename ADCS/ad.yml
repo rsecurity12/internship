@@ -9,10 +9,6 @@
     ansible_winrm_operation_timeout_sec: 2000
 
   tasks:
-  - name: Set Hostname Variable
-    set_fact:
-      hostname: "{{ ansible_hostname }}"     
-
   - name: Create new domain in a new forest on the target host and reboot
     microsoft.ad.domain:
       dns_domain_name: purple.local
