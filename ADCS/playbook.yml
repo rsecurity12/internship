@@ -22,9 +22,9 @@
       Install-ADDSForest -DomainName "pwc.com" -SafeModeAdministratorPassword (ConvertTo-SecureString "Password1!" -AsPlainText -Force) -Force -NoRebootOnCompletion
     register: domain_creation
 
-  - name: Reboot the server
-    win_reboot:
-    when: domain_creation is succeeded
+#  - name: Reboot the server
+#    win_reboot:
+#    when: domain_creation is succeeded
 
 #  - name: Create new domain in a new forest on the target host
 #    microsoft.ad.domain:
