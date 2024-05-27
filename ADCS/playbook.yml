@@ -6,6 +6,7 @@
     hostname: "{{ ansible_hostname }}"
     ansible_winrm_operation_timeout_sec: 1800
     read_timeout_sec: 1900
+    operation_timeout_sec: 1910
 
   tasks:
   - name: Set Hostname Variable
