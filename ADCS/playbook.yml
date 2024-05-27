@@ -222,7 +222,7 @@
 
   - name: "Configure ATTRIBUTESUBJECTALTNAME2 on CA - ESC6"
     win_shell: |
-       certutil -config "purple.com\CA01.purple.com" -setreg policy\Editflags +EDITF_ATTRIBUTESUBJECTALTNAME2
+       certutil -config "purple\CA01.purple.com" -setreg policy\Editflags +EDITF_ATTRIBUTESUBJECTALTNAME2
 
   - name: Refresh
     ansible.windows.win_command: gpupdate /force
