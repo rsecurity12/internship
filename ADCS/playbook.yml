@@ -75,7 +75,7 @@
       script: |
         IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicsfolder.ps1' -UseBasicParsing);
         Install-AtomicsFolder
-    become_user: PWC\Administrator
+    become_user: purple\Administrator
     register: install_result
           
   - name: Installing and testing Sysmon
@@ -142,7 +142,7 @@
 
 #  - name: Install role files and dependencies (IIS Server)
 #    win_shell: Install-WindowsFeature -Name Web-Server -IncludeManagementTools
-#    become_user: PWC\Administrator
+#    become_user: purple\Administrator
 #    register: install_result
 
 #  - name: Install AD CS Enrollment Policy Web Service
@@ -150,7 +150,7 @@
 #       Import-Module ServerManager
 #       Add-WindowsFeature Adcs-Enroll-Web-Pol
 #       Install-AdcsEnrollmentPolicyWebService -AuthenticationType Kerberos -Force -Confirm:$false
-#    become_user: PWC\Administrator
+#    become_user: purple\Administrator
 #    register: install_result
 
 #  - name: Install Certification Authority Enrollment Web Service 
@@ -158,7 +158,7 @@
 #        Import-Module ServerManager
 #        Add-WindowsFeature Adcs-Enroll-Web-Svc
 #        Install-AdcsEnrollmentWebService -Force -Confirm:$false
-#    become_user: PWC\Administrator
+#    become_user: purple\Administrator
 #    register: install_result
    
 #  - name: Install Online Responder Role Service
@@ -166,14 +166,14 @@
 #        Import-Module ServerManager
 #        Add-WindowsFeature Adcs-Online-Cert
 #        Install-AdcsOnlineResponder -Force -Confirm:$false
-#    become_user: PWC\Administrator
+#    become_user: purple\Administrator
 #    register: install_result
 
   - name: Install NuGet package provider
     ansible.windows.win_powershell:
       script: |
          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    become_user: PWC\Administrator
+    become_user: purple\Administrator
     register: install_result
 
   - name: features | Installing RSAT
@@ -209,7 +209,7 @@
 
   - name: Install templates
     win_shell: |
-      if (-not(Get-ADCSTemplate -DisplayName "{{item}}")) { New-ADCSTemplate -DisplayName "{{item}}" -JSON (Get-Content c:\setup\{{item}}.json -Raw) -Identity "pwc.com}\Domain #Users" -Publish }
+      if (-not(Get-ADCSTemplate -DisplayName "{{item}}")) { New-ADCSTemplate -DisplayName "{{item}}" -JSON (Get-Content c:\setup\{{item}}.json -Raw) -Identity "purple.com}\Domain #Users" -Publish }
     with_items:
        - ESC1
        - ESC2
@@ -219,7 +219,7 @@
 
   - name: "Configure ATTRIBUTESUBJECTALTNAME2 on CA - ESC6"
     win_shell: |
-       certutil -config "pwc.com\CA01.pwc.com" -setreg policy\Editflags +EDITF_ATTRIBUTESUBJECTALTNAME2
+       certutil -config "purple.com\CA01.purple.com" -setreg policy\Editflags +EDITF_ATTRIBUTESUBJECTALTNAME2
 
   - name: Refresh
     ansible.windows.win_command: gpupdate /force
@@ -228,6 +228,6 @@
     ansible.windows.win_powershell:
       script: |
           Get-CATemplate
-    become_user: PWC\Administrator
+    become_user: purple\Administrator
     register: install_result
 ...
