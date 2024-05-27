@@ -10,11 +10,25 @@
     set_fact:
       hostname: "{{ ansible_hostname }}"
 
+#  - name: Create new domain in a new forest on the target host
+#    microsoft.ad.domain:
+#      dns_domain_name: pwc.com
+#      safe_mode_password: Password1!
+#      reboot: true
+
   - name: Create new domain in a new forest on the target host
-    microsoft.ad.domain:
-      dns_domain_name: pwc.com
-      safe_mode_password: Password1!
-      reboot: true
+    win_command: |
+      Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
+      Install-ADDSForest `
+        -DomainName "pwc.com" `
+        -SafeModeAdministratorPassword (ConvertTo-SecureString "Password1!" -AsPlainText -Force) `
+        -Force `
+        -NoRebootOnCompletion
+   register: domain_creation
+
+    - name: Reboot the server
+      win_reboot:
+      when: domain_creation is succeeded
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
