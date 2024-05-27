@@ -7,9 +7,9 @@
 #    include_vars:
 #      file: /home/administrator/Desktop/ansible_project/playbooks/vars/secrets.yml
 
-  - name: Set Hostname Variable
-    set_fact:
-      hostname: "{{ ansible_hostname }}"
+#  - name: Set Hostname Variable
+#    set_fact:
+#      hostname: "{{ ansible_hostname }}"
 
   - name: Create new domain in a new forest on the target host
     microsoft.ad.domain:
