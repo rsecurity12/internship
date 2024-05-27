@@ -1,1 +1,231 @@
+---
+- name: Creating Purple Team Lab With Automations
+  hosts: win_host
 
+  tasks:
+  - name: Set Hostname Variable
+    set_fact:
+      hostname: "{{ ansible_hostname }}"
+
+  - name: Create new domain in a new forest on the target host
+    microsoft.ad.domain:
+      dns_domain_name: pwc.com
+      safe_mode_password: Password1!
+      reboot: true
+
+  - name: Create new Windows domain in a new forest with specific parameters
+    microsoft.ad.domain:
+      create_dns_delegation: false
+      database_path: C:\Windows\NTDS
+      dns_domain_name: pwc.com
+      domain_mode: Win2012R2
+      domain_netbios_name: PWC
+      forest_mode: Win2012R2
+      safe_mode_password: Password1!
+      sysvol_path: C:\Windows\SYSVOL
+      install_dns: true
+    register: domain_install
+
+  - name: Reboot host if install requires it
+    ansible.windows.win_reboot:
+    when: domain_install.reboot_required
+
+  - name: Creating users and groups
+    ansible.windows.win_powershell:
+      script: |
+        $script = (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/wazehell/vulnerable-AD/master/vulnad.ps1')
+        Invoke-Expression -Command $script
+        Invoke-VulnAD -UsersLimit 20 -DomainName 'pwc.com'
+        
+  - name: Create shares folder for SMB
+    win_file:
+      path: C:\shares
+      state: directory
+        
+  - name: Create Samba share for C:\shares
+    ansible.windows.win_share:
+      name: MyShare
+      path: C:\shares
+      comment: "Shared folder using Samba"
+      read_only: no
+      browseable: yes
+      guest_ok: no
+      state: present
+      smb_version: "2.0"
+
+  - name: Set Windows Defender exclusion for a folder
+    ansible.windows.win_powershell:
+      script: |
+        Add-MpPreference -ExclusionPath C:\AtomicRedTeam
+    become_user: PWC\Administrator
+    register: install_result
+    
+  - name: Installing Atomic Red Team framework
+    ansible.windows.win_powershell:
+      script: |
+        IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
+        Install-AtomicRedTeam 
+    become_user: PWC\Administrator
+    register: install_result
+    
+  - name: Installing Atomic Red Team Folders
+    ansible.windows.win_powershell:
+      script: |
+        IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicsfolder.ps1' -UseBasicParsing);
+        Install-AtomicsFolder
+    become_user: PWC\Administrator
+    register: install_result
+          
+  - name: Installing and testing Sysmon
+    ansible.windows.win_powershell:
+      script: |
+        Invoke-WebRequest -Uri https://download.sysinternals.com/files/Sysmon.zip -OutFile C:\Windows\Temp\Sysmon.zip
+        Expand-Archive -LiteralPath C:\Windows\Temp\Sysmon.zip -DestinationPath C:\Windows\Temp\Sysmon -Force
+        Invoke-WebRequest -Uri https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml -OutFile C:\Windows\Temp\Sysmon\sysmonconfig.xml
+        C:\Windows\Temp\Sysmon\Sysmon64.exe -accepteula -i
+        C:\Windows\Temp\Sysmon\sysmonconfig.xml
+        Get-Service sysmon64
+        Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 10
+    become_user: PWC\Administrator
+    register: install_result
+
+  - name: Check if Certification Authority is installed
+    win_shell: |
+       Get-WindowsFeature -Name ADCS-Cert-Authority | Select-Object -ExpandProperty Installed
+    become_user: Administrator
+    register: ca_installed_result
+
+  - name: Uninstall Certification Authority if installed
+    win_shell: Uninstall-AdcsCertificationAuthority -Force
+    when: "'True' in ca_installed_result.stdout"
+    become_user: Administrator
+    
+  - name: Install AD CS feature
+    win_feature:
+      name: Adcs-Cert-Authority
+      include_management_tools: yes
+      state: present
+      become_user: PWC\Administrator
+
+  - name: Install Certification Authority
+    win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -CACommonName "CA01.pwc.com" -CADistinguishedNameSuffix "DC=pwc,DC=com" -ValidityPeriod Years    -ValidityPeriodUnits 3 -CryptoProviderName "ECDSA_P256#Microsoft Software Key Storage Provider" -KeyLength 256 -HashAlgorithmName SHA256 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "C:\windows\system32\CertLog" -Force -Confirm:$false
+    become_user: PWC\Administrator
+    register: install_result
+    failed_when: "'The private key \"CA01.pwc.com\" already exists' in install_result.stderr"
+    ignore_errors: yes
+
+  - name: Install-WindowsFeature ADCS-Web-Enrollment
+    ansible.windows.win_feature:
+      name: ADCS-Web-Enrollment
+      state: present
+
+  # ESC 8
+  # ignore error if already installed
+  - name: Enable Web enrollement
+    ansible.windows.win_powershell:
+      script: |
+        [CmdletBinding()]
+        param ()
+        try {
+          Install-AdcsWebEnrollment -Force
+          $Ansible.Changed = $true
+        } catch {
+          $Ansible.Changed = $false
+        }
+
+  - name: reboot | Rebooting Server
+    win_reboot:
+      connect_timeout: 15
+      post_reboot_delay: 15
+
+#  - name: Install role files and dependencies (IIS Server)
+#    win_shell: Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+#    become_user: PWC\Administrator
+#    register: install_result
+
+#  - name: Install AD CS Enrollment Policy Web Service
+#    win_shell: |
+#       Import-Module ServerManager
+#       Add-WindowsFeature Adcs-Enroll-Web-Pol
+#       Install-AdcsEnrollmentPolicyWebService -AuthenticationType Kerberos -Force -Confirm:$false
+#    become_user: PWC\Administrator
+#    register: install_result
+
+#  - name: Install Certification Authority Enrollment Web Service 
+#    win_shell: |
+#        Import-Module ServerManager
+#        Add-WindowsFeature Adcs-Enroll-Web-Svc
+#        Install-AdcsEnrollmentWebService -Force -Confirm:$false
+#    become_user: PWC\Administrator
+#    register: install_result
+   
+#  - name: Install Online Responder Role Service
+#    win_shell: |
+#        Import-Module ServerManager
+#        Add-WindowsFeature Adcs-Online-Cert
+#        Install-AdcsOnlineResponder -Force -Confirm:$false
+#    become_user: PWC\Administrator
+#    register: install_result
+
+  - name: Install NuGet package provider
+    ansible.windows.win_powershell:
+      script: |
+         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    become_user: PWC\Administrator
+    register: install_result
+
+  - name: features | Installing RSAT
+    win_feature:
+      name: RSAT
+      include_sub_features: yes
+      include_management_tools: yes
+      state: present
+
+  - name: Install ADCSTemplate Module
+    win_copy:
+      src: "./Templates/ADCSTemplate"
+      dest: "C:\\Program Files\\WindowsPowerShell\\Modules"
+
+  - name: Import ADCSTemplate Module
+    win_shell: Import-Module ADCSTemplate
+ 
+  - name: create a directory for templates
+    win_file:
+      path: c:\setup
+      state: directory
+ 
+  - name: Copy templates json
+    win_copy:
+      src: "./Templates/{{item}}.json"
+      dest: "C:\\setup\\{{item}}.json"
+    with_items:
+        - ESC1
+        - ESC2
+        - ESC3
+        - ESC3-CRA
+        - ESC4
+
+  - name: Install templates
+    win_shell: |
+      if (-not(Get-ADCSTemplate -DisplayName "{{item}}")) { New-ADCSTemplate -DisplayName "{{item}}" -JSON (Get-Content c:\setup\{{item}}.json -Raw) -Identity "pwc.com}\Domain #Users" -Publish }
+    with_items:
+       - ESC1
+       - ESC2
+       - ESC3
+       - ESC3-CRA
+       - ESC4
+
+  - name: "Configure ATTRIBUTESUBJECTALTNAME2 on CA - ESC6"
+    win_shell: |
+       certutil -config "pwc.com\CA01.pwc.com" -setreg policy\Editflags +EDITF_ATTRIBUTESUBJECTALTNAME2
+
+  - name: Refresh
+    ansible.windows.win_command: gpupdate /force
+
+  - name: Check available CA templates
+    ansible.windows.win_powershell:
+      script: |
+          Get-CATemplate
+    become_user: PWC\Administrator
+    register: install_result
+...
