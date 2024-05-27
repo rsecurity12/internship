@@ -4,6 +4,7 @@
   gather_facts: yes
   vars:
     hostname: "{{ ansible_hostname }}"
+    ansible_winrm_operation_timeout_sec: 1800
 
   tasks:
   - name: Set Hostname Variable
