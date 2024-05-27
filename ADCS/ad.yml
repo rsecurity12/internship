@@ -1,0 +1,52 @@
+---
+- name: Creating Purple Team Lab With Automations
+  hosts: win_host
+  gather_facts: no
+  vars:
+    hostname: "{{ ansible_hostname }}"
+    ansible_winrm_operation_timeout_sec: 1800
+    ansible_winrm_read_timeout_sec: 3000
+    ansible_winrm_operation_timeout_sec: 2000
+
+  tasks:
+  - name: Set Hostname Variable
+    set_fact:
+      hostname: "{{ ansible_hostname }}"     
+
+  - name: Create new domain in a new forest on the target host and reboot
+    microsoft.ad.domain:
+      dns_domain_name: purple.local
+      safe_mode_password: Password1!
+      reboot: true
+
+#  - name: Create new domain in a new forest on the target host and reboot
+#    win_reboot:
+#      connect_timeout: 15
+#      post_reboot_delay: 180 # Wait for 30 seconds before starting to check
+#      msg: "Reboot after domain creation"
+#      reboot_timeout: 900 # Total time to wait for the reboot to complete
+
+
+
+  - name: Create new Windows domain in a new forest with specific parameters and reboot in post task
+    microsoft.ad.domain:
+      create_dns_delegation: false
+      database_path: C:\Windows\NTDS
+      dns_domain_name: purple.local
+      domain_mode: Win2012R2
+      domain_netbios_name: PURPLE
+      forest_mode: Win2012R2
+      safe_mode_password: Password1!
+      sysvol_path: C:\Windows\SYSVOL
+    register: domain_install
+
+  - name: Reboot host if install requires it
+    ansible.windows.win_reboot:
+    when: domain_install.reboot_required
+
+  - name: Creating users and groups
+    ansible.windows.win_powershell:
+      script: |
+        $script = (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/wazehell/vulnerable-AD/master/vulnad.ps1')
+        Invoke-Expression -Command $script
+        Invoke-VulnAD -UsersLimit 20 -DomainName 'purple.com'
