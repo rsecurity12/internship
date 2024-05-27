@@ -12,8 +12,8 @@
 
   - name: Create new domain in a new forest on the target host and reboot
     microsoft.ad.domain:
-      dns_domain_name: ansible.vagrant
-      safe_mode_password: password123!
+      dns_domain_name: pwc.com
+      safe_mode_password: password1!
       reboot: true
 
   - name: Create new domain in a new forest on the target host
