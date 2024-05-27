@@ -16,6 +16,7 @@
   - name: Install AD DS Forest
     win_shell: |
       Install-WindowsFeature -Name RSAT-AD-PowerShell -IncludeAllSubFeature
+      Import-Module ActiveDirectory
 
 
   - name: features | Installing RSAT
