@@ -10,7 +10,7 @@
     microsoft.ad.domain:
       dns_domain_name: pwc.com
       safe_mode_password: Password1!
-      reboot: true
+      reboot: false
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
