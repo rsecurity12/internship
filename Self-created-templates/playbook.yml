@@ -1,19 +1,22 @@
 ---
 - name: Creating Purple Team Lab With Automations
   hosts: win_host
+  gather_facts: yes
+  vars:
+     hostname: "{{ ansible_hostname }}"
+     ansible_winrm_operation_timeout_sec: 1800
+     ansible_winrm_read_timeout_sec: 300
+     ansible_winrm_operation_timeout_sec: 200
 
   tasks:
-#  - name: Include encrypted variables
-#    include_vars:
-#      file: /home/administrator/Desktop/ansible_project/playbooks/vars/secrets.yml
-
-  - name: Set Hostname Variable
-    set_fact:
-      hostname: "{{ ansible_hostname }}"
-
   - name: Create new domain in a new forest on the target host
     microsoft.ad.domain:
       dns_domain_name: pwc.com
       safe_mode_password: Password1!
-      reboot: true
+      reboot: false
+
+  - name: reboot | Rebooting Server
+    win_reboot:
+      connect_timeout: 15
+      post_reboot_delay: 15
 ...
