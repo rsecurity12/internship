@@ -18,7 +18,7 @@
 
   - name: Wait for the machine to be back online
     wait_for_connection:
-      timeout: 240  # Adjust timeout as necessary
+      timeout: 3600  # Increased timeout to 1 hour
     
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
