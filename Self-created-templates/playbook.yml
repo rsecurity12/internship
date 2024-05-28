@@ -10,4 +10,10 @@
   - name: Set Hostname Variable
     set_fact:
       hostname: "{{ ansible_hostname }}"
+
+  - name: Create new domain in a new forest on the target host
+    microsoft.ad.domain:
+      dns_domain_name: pwc.com
+      safe_mode_password: Password1!
+      reboot: true
 ...
