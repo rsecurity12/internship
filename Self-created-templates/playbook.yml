@@ -1,1 +1,13 @@
+---
+- name: Creating Purple Team Lab With Automations
+  hosts: win_host
 
+  tasks:
+#  - name: Include encrypted variables
+#    include_vars:
+#      file: /home/administrator/Desktop/ansible_project/playbooks/vars/secrets.yml
+
+  - name: Set Hostname Variable
+    set_fact:
+      hostname: "{{ ansible_hostname }}"
+...
