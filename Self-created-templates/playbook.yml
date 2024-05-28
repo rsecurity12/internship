@@ -15,7 +15,14 @@
   - name: reboot | Rebooting Server
     win_reboot:
       connect_timeout: 15
-      post_reboot_delay: 15
+      post_reboot_delay: 30
+      reboot_timeout: 1200  # 20 minutes
+
+  - name: Wait for server to come back online
+    wait_for_connection:
+      delay: 30
+      timeout: 1800  # 30 minutes
+      sleep: 10
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
