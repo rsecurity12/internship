@@ -192,7 +192,7 @@
           "ESC3-3.json",
           "ESC3-4.json",
          )
-         $baseURL = "https://raw.githubusercontent.com/rsecurity12/internship/main/vulnerable-templates/"
+         $baseURL = "https://raw.githubusercontent.com/rsecurity12/internship/main/Self-created-templates/vulnerable-templates/"
          
          foreach ($fileName in $fileNames)
          {
