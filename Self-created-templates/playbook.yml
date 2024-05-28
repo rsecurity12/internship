@@ -15,6 +15,10 @@
   - name: Force a reboot
     ansible.windows.win_shell: |
       shutdown.exe /r /f /t 0
+
+  - name: Wait for the machine to be back online
+    wait_for_connection:
+      timeout: 240  # Adjust timeout as necessary
     
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
