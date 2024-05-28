@@ -19,4 +19,29 @@
     win_reboot:
       connect_timeout: 15
       post_reboot_delay: 15
+
+  - name: Create new Windows domain in a new forest with specific parameters
+    microsoft.ad.domain:
+      create_dns_delegation: false
+      database_path: C:\Windows\NTDS
+      dns_domain_name: pwc.com
+      domain_mode: Win2012R2
+      domain_netbios_name: PWC
+      forest_mode: Win2012R2
+      safe_mode_password: Password1!
+      sysvol_path: C:\Windows\SYSVOL
+      install_dns: true
+    register: domain_install
+
+  - name: reboot | Rebooting Server
+    win_reboot:
+      connect_timeout: 15
+      post_reboot_delay: 15
+
+  - name: Creating users and groups
+    ansible.windows.win_powershell:
+      script: |
+        $script = (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/wazehell/vulnerable-AD/master/vulnad.ps1')
+        Invoke-Expression -Command $script
+        Invoke-VulnAD -UsersLimit 20 -DomainName 'pwc.com'
 ...
