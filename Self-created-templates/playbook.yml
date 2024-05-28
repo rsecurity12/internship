@@ -15,7 +15,11 @@
     microsoft.ad.domain:
       dns_domain_name: pwc.com
       safe_mode_password: Password1!
-      reboot: true
+      reboot: no
+
+  - name: Force a reboot
+    ansible.windows.win_shell: |
+      shutdown.exe /r /f /t 0
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
