@@ -1,43 +1,33 @@
 ---
 - name: Creating Purple Team Lab With Automations
   hosts: win_host
-  gather_facts: yes
-  vars:
-    hostname: "{{ ansible_hostname }}"
-    ansible_winrm_operation_timeout_sec: 1800
-    ansible_winrm_read_timeout_sec: 300
-    ansible_winrm_operation_timeout_sec: 200
 
   tasks:
-#  - name: Set Hostname Variable
-#    set_fact:
-#      hostname: "{{ ansible_hostname }}"
-      
-  - name: Create new domain in a new forest on the target host and reboot
+  - name: Include encrypted variables
+    include_vars:
+      file: ./secrets.yml
+
+  - name: Set Hostname Variable
+    set_fact:
+      hostname: "{{ ansible_hostname }}"
+
+  - name: Create new domain in a new forest on the target host
     microsoft.ad.domain:
-      dns_domain_name: purple.local
+      dns_domain_name: pwc.com
       safe_mode_password: Password1!
       reboot: true
 
-#  - name: Create new domain in a new forest on the target host and reboot
-#    win_reboot:
-#      connect_timeout: 15
-#      post_reboot_delay: 180 # Wait for 30 seconds before starting to check
-#      msg: "Reboot after domain creation"
-#      reboot_timeout: 900 # Total time to wait for the reboot to complete
-
-
-
-  - name: Create new Windows domain in a new forest with specific parameters and reboot in post task
+  - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
       create_dns_delegation: false
       database_path: C:\Windows\NTDS
-      dns_domain_name: purple.local
+      dns_domain_name: pwc.com
       domain_mode: Win2012R2
-      domain_netbios_name: PURPLE
+      domain_netbios_name: PWC
       forest_mode: Win2012R2
       safe_mode_password: Password1!
       sysvol_path: C:\Windows\SYSVOL
+      install_dns: true
     register: domain_install
 
   - name: Reboot host if install requires it
@@ -49,7 +39,7 @@
       script: |
         $script = (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/wazehell/vulnerable-AD/master/vulnad.ps1')
         Invoke-Expression -Command $script
-        Invoke-VulnAD -UsersLimit 20 -DomainName 'purple.com'
+        Invoke-VulnAD -UsersLimit 20 -DomainName 'pwc.com'
         
   - name: Create shares folder for SMB
     win_file:
@@ -71,7 +61,7 @@
     ansible.windows.win_powershell:
       script: |
         Add-MpPreference -ExclusionPath C:\AtomicRedTeam
-    become_user: purple\Administrator
+    become_user: PWC\Administrator
     register: install_result
     
   - name: Installing Atomic Red Team framework
@@ -79,7 +69,7 @@
       script: |
         IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
         Install-AtomicRedTeam 
-    become_user: purple\Administrator
+    become_user: PWC\Administrator
     register: install_result
     
   - name: Installing Atomic Red Team Folders
@@ -87,7 +77,7 @@
       script: |
         IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicsfolder.ps1' -UseBasicParsing);
         Install-AtomicsFolder
-    become_user: purple\Administrator
+    become_user: PWC\Administrator
     register: install_result
           
   - name: Installing and testing Sysmon
@@ -100,7 +90,7 @@
         C:\Windows\Temp\Sysmon\sysmonconfig.xml
         Get-Service sysmon64
         Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 10
-    become_user: purple\Administrator
+    become_user: PWC\Administrator
     register: install_result
 
   - name: Check if Certification Authority is installed
@@ -119,42 +109,18 @@
       name: Adcs-Cert-Authority
       include_management_tools: yes
       state: present
-      become_user: purple\Administrator
+      become_user: PWC\Administrator
 
   - name: Install Certification Authority
-    win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -CACommonName "CA01.purple.local" -CADistinguishedNameSuffix "DC=purple,DC=local" -ValidityPeriod Years    -ValidityPeriodUnits 3 -CryptoProviderName "ECDSA_P256#Microsoft Software Key Storage Provider" -KeyLength 256 -HashAlgorithmName SHA256 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "C:\windows\system32\CertLog" -Force -Confirm:$false
-    become_user: purple\Administrator
+    win_shell: Install-AdcsCertificationAuthority -CAType EnterpriseRootCA -CACommonName "CA01.pwc.com" -CADistinguishedNameSuffix "DC=pwc,DC=com" -ValidityPeriod Years    -ValidityPeriodUnits 3 -CryptoProviderName "ECDSA_P256#Microsoft Software Key Storage Provider" -KeyLength 256 -HashAlgorithmName SHA256 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "C:\windows\system32\CertLog" -Force -Confirm:$false
+    become_user: PWC\Administrator
     register: install_result
-    failed_when: "'The private key \"CA01.purple.local\" already exists' in install_result.stderr"
+    failed_when: "'The private key \"CA01.pwc.com\" already exists' in install_result.stderr"
     ignore_errors: yes
-
-  - name: Install-WindowsFeature ADCS-Web-Enrollment
-    ansible.windows.win_feature:
-      name: ADCS-Web-Enrollment
-      state: present
-
-  # ESC 8
-  # ignore error if already installed
-  - name: Enable Web enrollement
-    ansible.windows.win_powershell:
-      script: |
-        [CmdletBinding()]
-        param ()
-        try {
-          Install-AdcsWebEnrollment -Force
-          $Ansible.Changed = $true
-        } catch {
-          $Ansible.Changed = $false
-        }
-
-  - name: reboot | Rebooting Server
-    win_reboot:
-      connect_timeout: 15
-      post_reboot_delay: 15
 
 #  - name: Install role files and dependencies (IIS Server)
 #    win_shell: Install-WindowsFeature -Name Web-Server -IncludeManagementTools
-#    become_user: purple\Administrator
+#    become_user: PWC\Administrator
 #    register: install_result
 
 #  - name: Install AD CS Enrollment Policy Web Service
@@ -162,7 +128,7 @@
 #       Import-Module ServerManager
 #       Add-WindowsFeature Adcs-Enroll-Web-Pol
 #       Install-AdcsEnrollmentPolicyWebService -AuthenticationType Kerberos -Force -Confirm:$false
-#    become_user: purple\Administrator
+#    become_user: PWC\Administrator
 #    register: install_result
 
 #  - name: Install Certification Authority Enrollment Web Service 
@@ -170,7 +136,7 @@
 #        Import-Module ServerManager
 #        Add-WindowsFeature Adcs-Enroll-Web-Svc
 #        Install-AdcsEnrollmentWebService -Force -Confirm:$false
-#    become_user: purple\Administrator
+#    become_user: PWC\Administrator
 #    register: install_result
    
 #  - name: Install Online Responder Role Service
@@ -178,68 +144,114 @@
 #        Import-Module ServerManager
 #        Add-WindowsFeature Adcs-Online-Cert
 #        Install-AdcsOnlineResponder -Force -Confirm:$false
-#    become_user: purple\Administrator
+#    become_user: PWC\Administrator
 #    register: install_result
-
-  - name: features | Installing RSAT
-    win_feature:
-      name: RSAT
-      include_sub_features: yes
-      include_management_tools: yes
-      state: present
 
   - name: Install NuGet package provider
     ansible.windows.win_powershell:
       script: |
          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    become_user: purple\Administrator
+    become_user: PWC\Administrator
     register: install_result
 
-  - name: Install ADCSTemplate Module
-    win_copy:
-      src: "./Templates/ADCSTemplate"
-      dest: "C:\\Program Files\\WindowsPowerShell\\Modules"
+  - name: Install ADCSTemplate
+    ansible.windows.win_powershell:
+      script: |
+         Install-Module ADCSTemplate -Force
+    become_user: PWC\Administrator
+    register: install_result
 
-  - name: Import ADCSTemplate Module
-    win_shell: Import-Module ADCSTemplate
- 
-  - name: create a directory for templates
+  - name: Import the ADCSTemplate module if not already loaded
+    ansible.windows.win_powershell:
+      script: |
+         if (-not (Get-Module -Name ADCSTemplate -ErrorAction SilentlyContinue))
+         {
+            Import-Module ADCSTemplate
+         }
+    become_user: PWC\Administrator
+    register: install_result
+
+  - name: Create temporary new directory
     win_file:
-      path: c:\setup
+      path: C:\Certificates
       state: directory
- 
-  - name: Copy templates json
-    win_copy:
-      src: "./Templates/{{item}}.json"
-      dest: "C:\\setup\\{{item}}.json"
-    with_items:
-        - ESC1
-        - ESC2
-        - ESC3
-        - ESC3-CRA
-        - ESC4
+    become_user: PWC\Administrator
+    register: install_result
 
-  - name: Install templates
-    win_shell: |
-      if (-not(Get-ADCSTemplate -DisplayName "{{item}}")) { New-ADCSTemplate -DisplayName "{{item}}" -JSON (Get-Content c:\setup\{{item}}.json -Raw) -Identity "purple.com}\Domain #Users" -Publish }
-    with_items:
-       - ESC1
-       - ESC2
-       - ESC3
-       - ESC3-CRA
-       - ESC4
+  - name: Change to Certificates directory
+    ansible.windows.win_shell: |
+      cd C:\Certificates
+    become_user: PWC\Administrator
 
-  - name: "Configure ATTRIBUTESUBJECTALTNAME2 on CA - ESC6"
-    win_shell: |
-       certutil -config "purple\CA01.purple.com" -setreg policy\Editflags +EDITF_ATTRIBUTESUBJECTALTNAME2
+  - name: Download .json template files from GitHub repo, Loop through each filename and download the corresponding file.
+    ansible.windows.win_powershell:
+      script: |
+        $fileNames = @(
+          "ESC3-1.json",
+          "ESC3-2.json",
+          "ESC3-3.json",
+          "ESC3-4.json",
+         )
+         $baseURL = "https://raw.githubusercontent.com/rsecurity12/internship/main/vulnerable-templates/"
+         
+         foreach ($fileName in $fileNames)
+         {
+           $url = $baseURL + $fileName
+           Invoke-WebRequest -URI $url -OutFile C:\Certificates\$fileName
+         }
+    become_user: PWC\Administrator
+    register: install_result
 
-  - name: Refresh
-    ansible.windows.win_command: gpupdate /force
+  - name: Publish and issue vulnerable templates
+    ansible.windows.win_powershell:
+      script: |
+          $folderPath = "C:\Certificates"
+          $templates = Get-ChildItem -Path $folderPath -File
+          foreach ($template in $templates)
+          {
+              $templateName = $template.BaseName
+              $jsonContent = Get-Content $template.FullName -Raw
+              New-ADCSTemplate -DisplayName $templateName -JSON $jsonContent -Publish
+              Set-ADCSTemplateACL -DisplayName $templateName -Identity 'PWC\domain users' -Enroll -AutoEnroll
+          }          
+    become_user: PWC\Administrator
+    register: install_result
+
+  - name: Download, publish and issue ssl certificate
+    ansible.windows.win_powershell:
+      script: |
+          $SSLBaseURL = "https://raw.githubusercontent.com/rsecurity12/internship/main/SSL/ssl.json"
+          Invoke-WebRequest -URI $SSLBaseURL -OutFile C:\Certificates\ssl.json
+          New-ADCSTemplate -DisplayName ssl -JSON (Get-Content C:\Certificates\ssl.json -Raw) -Publish 
+          Set-ADCSTemplateACL -DisplayName ssl -Identity 'PWC\domain admins' 
+    become_user: PWC\Administrator
+    register: install_result 
+        
+#  - name: Import certificate to Personal store
+#    ansible.windows.win_powershell:
+#      script: |
+#          $PfxBaseURL = "https://github.com/rsecurity12/internship/raw/main/LDAPs/LDAPsCert.pfx"
+#          Invoke-WebRequest -URI $PfxBaseURL -OutFile C:\Certificates\LDAPsCert.pfx
+#          $pfxPath = "C:\Certificates\LDAPsCert.pfx"
+#          $certStorePath = "Cert:\LocalMachine\My"
+#          $certPassword = "Password1!"
+#          $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation $certStorePath -Password (ConvertTo-SecureString -String $certPassword -AsPlainText -Force)
+#          $cert | Format-List  
+      
+  - name: Enable connection
+    ansible.windows.win_powershell:
+      script: |
+          New-NetFirewallRule -DisplayName "Allow 389" -Direction Outbound -LocalPort 389 -Protocol TCP -Action Allow
+          New-NetFirewallRule -DisplayName "Allow 636" -Direction Outbound -LocalPort 636 -Protocol TCP -Action Allow
+          New-NetFirewallRule -DisplayName "Allow 389" -Direction Inbound -LocalPort 389 -Protocol TCP -Action Allow
+          New-NetFirewallRule -DisplayName "Allow 636" -Direction Inbound -LocalPort 636 -Protocol TCP -Action Allow
+    become_user: PWC\Administrator
+    register: install_result
 
   - name: Check available CA templates
     ansible.windows.win_powershell:
       script: |
           Get-CATemplate
-    become_user: purple\Administrator
+    become_user: PWC\Administrator
     register: install_result
 ...
