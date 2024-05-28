@@ -12,17 +12,9 @@
       safe_mode_password: Password1!
       reboot: false
 
-  - name: reboot | Rebooting Server
-    win_reboot:
-      connect_timeout: 15
-      post_reboot_delay: 30
-      reboot_timeout: 1200  # 20 minutes
-
-  - name: Wait for server to come back online
-    wait_for_connection:
-      delay: 30
-      timeout: 1800  # 30 minutes
-      sleep: 10
+  - name: Reboot a slow machine that might have lots of updates to apply
+    ansible.windows.win_reboot:
+      reboot_timeout: 3600
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
