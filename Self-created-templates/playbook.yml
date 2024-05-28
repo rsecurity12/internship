@@ -4,21 +4,13 @@
   gather_facts: yes
   vars:
      hostname: "{{ ansible_hostname }}"
-     ansible_winrm_operation_timeout_sec: 1800
-     ansible_winrm_read_timeout_sec: 300
-     ansible_winrm_operation_timeout_sec: 200
 
   tasks:
   - name: Create new domain in a new forest on the target host
     microsoft.ad.domain:
       dns_domain_name: pwc.com
       safe_mode_password: Password1!
-      reboot: false
-
-  - name: reboot | Rebooting Server
-    win_reboot:
-      connect_timeout: 15
-      post_reboot_delay: 15
+      reboot: true
 
   - name: Create new Windows domain in a new forest with specific parameters
     microsoft.ad.domain:
@@ -32,11 +24,6 @@
       sysvol_path: C:\Windows\SYSVOL
       install_dns: true
     register: domain_install
-
-  - name: reboot | Rebooting Server
-    win_reboot:
-      connect_timeout: 15
-      post_reboot_delay: 15
 
   - name: Creating users and groups
     ansible.windows.win_powershell:
