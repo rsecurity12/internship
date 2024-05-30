@@ -1,0 +1,13 @@
+---
+- name: Create a user on a Windows machine
+  hosts: hosts
+  tasks:
+    - name: Create a new user
+      win_user:
+        name: johndoe
+        password: P@ssw0rd!
+        state: present
+        password_never_expires: yes
+        user_cannot_change_password: no
+        groups:
+          - "Users"
